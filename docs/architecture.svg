@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="430" viewBox="0 0 1320 430" role="img" aria-labelledby="title desc">
+<title id="title">AI SRE agent architecture</title>
+<desc id="desc">An incident enters the Streamlit UI. The agent uses Bedrock and an MCP database tool. Database queries pass through tbot and Teleport to PostgreSQL on Amazon RDS. Results return to the agent for diagnosis.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker></defs>
+<rect width="1320" height="430" rx="24" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif" text-anchor="middle" fill="#243449">
+<text x="660" y="62" font-size="28" font-weight="600">From incident to diagnosis</text>
+<text x="660" y="94" font-size="16" fill="#64748b">AI investigation with short-lived database identity</text>
+<rect x="60" y="150" width="180" height="100" rx="18" fill="#edf5ff" stroke="#dce5ed"/>
+<text x="150.0" y="193" font-size="19" font-weight="600">Chat UI</text>
+<text x="150.0" y="220" font-size="14" fill="#64748b">Streamlit</text>
+<rect x="300" y="150" width="200" height="100" rx="18" fill="#f0edff" stroke="#dce5ed"/>
+<text x="400.0" y="193" font-size="19" font-weight="600">AI agent</text>
+<text x="400.0" y="220" font-size="14" fill="#64748b">Bedrock + MCP client</text>
+<rect x="560" y="150" width="190" height="100" rx="18" fill="#edf5ff" stroke="#dce5ed"/>
+<text x="655.0" y="193" font-size="19" font-weight="600">Database tool</text>
+<text x="655.0" y="220" font-size="14" fill="#64748b">MCP server</text>
+<rect x="810" y="150" width="210" height="100" rx="18" fill="#e9f8f2" stroke="#dce5ed"/>
+<text x="915.0" y="193" font-size="19" font-weight="600">Database access</text>
+<text x="915.0" y="220" font-size="14" fill="#64748b">tbot + Teleport</text>
+<rect x="1080" y="150" width="180" height="100" rx="18" fill="#fff4e8" stroke="#dce5ed"/>
+<text x="1170.0" y="193" font-size="19" font-weight="600">PostgreSQL</text>
+<text x="1170.0" y="220" font-size="14" fill="#64748b">Amazon RDS</text>
+<path d="M248 200 H292" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M508 200 H552" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M758 200 H802" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1028 200 H1072" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="150" y="282" font-size="13" fill="#64748b">Incident prompt</text>
+<text x="655" y="282" font-size="13" fill="#64748b">Read-only SQL</text>
+<text x="915" y="282" font-size="13" fill="#64748b">Identity · RBAC · audit</text>
+<text x="1170" y="282" font-size="13" fill="#64748b">IAM authentication</text>
+<path d="M1170 304 V334 H150 V304" fill="none" stroke="#b8c8d3" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="465" y="318" width="390" height="32" rx="16" fill="#fff"/>
+<text x="660" y="339" font-size="14" fill="#64748b">Query results → evidence → diagnosis</text>
+<text x="660" y="394" font-size="13" fill="#7b8999">Teleport DB Service connects to RDS using a short-lived IAM token</text>
+</g></svg>

@@ -27,28 +27,7 @@ Two security beats you'll see live:
 
 ## How it works (request flow)
 
-```
- You type an incident in the chat UI (app.py / Streamlit)
-        │
-        ▼
- agent_core.py ──► Amazon Bedrock (Claude)        "run this SQL" (tool_use)
-        │   ◄──────────────────────────────────
-        ▼
- mcp_server.py   (MCP server, one tool: run_read_query)
-        │
-        ▼
- db.py  ──► 127.0.0.1:5433  (NO password)
-        │
-        ▼
- tbot (Machine ID)  ── short-lived cert ──►  Teleport Cloud (proxy + RBAC + audit)
-        │                                          │  checks: read-only? db=opsdb?
-        │                                          │  super-user request → DENIED
-        ▼                                          ▼
- Teleport DB Service ── IAM auth token ──►  AWS RDS PostgreSQL (IAM auth ON)
-                                                   │
-                                            runs the SELECT as readonly_agent
-        rows travel back the same path ──► rendered as a live table in the UI
-```
+![AI SRE agent workflow](docs/architecture.svg)
 
 A deeper, fully-annotated walkthrough lives in
 [`demo-ai-agent/ARCHITECTURE.md`](demo-ai-agent/ARCHITECTURE.md).
@@ -142,13 +121,3 @@ Then in the UI:
 - Watch the **certificate countdown** and the **audit** entries update live.
 
 ---
-
-## Security notes for anyone reusing this
-
-- This is a **demo**, not production-hardened. Review RBAC, network rules, and IAM before adapting.
-- **No secrets are committed.** `.env`, Teleport identity material (`tbot-data/`, real `tbot.yaml`/`teleport-db.yaml`), tokens, and logs are all git-ignored.
-- The whole point is that the agent runs with a **short-lived, least-privilege, audited** identity — keep it that way if you fork this.
-
-
----
-
