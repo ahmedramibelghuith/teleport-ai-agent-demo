@@ -1,0 +1,41 @@
+# Teleport DATABASE SERVICE config.
+# This is the agent that sits next to (logically, in front of) RDS and registers
+# it as a Teleport-protected database. On Teleport Cloud, auth+proxy are managed;
+# this local process only runs the db_service role and dials out to the tenant.
+#
+# It authenticates to RDS using **IAM auth** (short-lived RDS tokens) via the
+# ambient AWS credentials on this machine -- so there is NO static DB password
+# anywhere in the Teleport path. The 'env: demo' label is what the agent role
+# (agent-db-readonly) is scoped to.
+#
+# Generated from teleport-db.yaml.tmpl by setup.sh -- do not edit the .tmpl's
+# placeholders by hand on the live copy.
+version: v3
+teleport:
+  nodename: rds-db-service
+  data_dir: ./teleport/db-service-data   # local + writable (default /var/lib needs root)
+  proxy_server: __TENANT__:443
+  join_params:
+    method: token
+    token_name: __DB_TOKEN__
+  log:
+    output: stderr
+    severity: INFO
+
+auth_service:   { enabled: "no" }
+proxy_service:  { enabled: "no" }
+ssh_service:    { enabled: "no" }
+
+db_service:
+  enabled: "yes"
+  databases:
+    - name: opsdb
+      protocol: postgres
+      uri: "your-rds-endpoint.xxxx.ap-south-1.rds.amazonaws.com:5432"
+      static_labels:
+        env: demo
+      aws:
+        region: ap-south-1
+        account_id: "123456789012"
+        rds:
+          instance_id: teleport-demo-db

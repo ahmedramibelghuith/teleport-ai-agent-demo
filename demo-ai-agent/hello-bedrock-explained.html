@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hello_bedrock.py — explained</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --bg:#f8fafc;
+    --local:#6366f1; --bedrock:#f59e0b; --ret:#0ea5e9; --good:#059669; --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #fff7ed 0%, transparent 60%),
+      radial-gradient(900px 480px at -5% 115%, #eef2ff 0%, transparent 55%),
+      var(--bg);
+    padding:26px 18px 40px}
+  .wrap{max-width:1320px;margin:0 auto}
+  header{text-align:center;margin-bottom:8px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--bedrock);
+    padding:5px 13px;border-radius:999px;box-shadow:0 8px 20px -8px var(--bedrock)}
+  h1{font-size:29px;margin:11px 0 4px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--local),var(--bedrock));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  svg{width:100%;height:auto;display:block;margin-top:6px}
+
+  .box rect{fill:#fff;rx:14;filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));stroke-width:2}
+  .box .t{font-size:14.5px;font-weight:800;fill:var(--ink)}
+  .box .s{font-size:11px;fill:var(--muted)}
+  .box .f{font-size:10.5px;font-weight:600;fill:#475569;font-family:ui-monospace,Menlo,monospace}
+  .local rect{stroke:var(--local)} .bedrock rect{stroke:var(--bedrock);stroke-width:2.8;fill:#fffbeb}
+
+  .zone{fill:#fff;opacity:.5;stroke-width:1.5;stroke-dasharray:2 5;rx:18}
+  .z-local{stroke:var(--local)} .z-bed{stroke:var(--bedrock)}
+  .zlabel{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .zl-local{fill:var(--local)} .zl-bed{fill:var(--bedrock)}
+
+  .wire{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 8;animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-16}}
+  .w-local{stroke:var(--local)} .w-bed{stroke:var(--bedrock)} .w-ret{stroke:var(--ret)}
+  .pkt{filter:drop-shadow(0 0 4px currentColor)}
+  .p-local{fill:var(--local);color:var(--local)} .p-bed{fill:var(--bedrock);color:var(--bedrock)}
+  .p-ret{fill:var(--ret);color:var(--ret)}
+  .lbl{font-size:10.5px;font-weight:700;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;
+    stroke-linejoin:round;text-anchor:middle}
+
+  .why{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+  @media(max-width:760px){.why{grid-template-columns:1fr}}
+  .card{border-radius:16px;padding:16px 18px;border:1px solid #e6e6ef;background:#fff;
+    box-shadow:0 10px 30px -20px rgba(15,23,42,.35)}
+  .card.good{border-color:#a7f3d0;background:linear-gradient(180deg,#ecfdf5,#fff)}
+  .card.bad{border-color:#fecaca;background:linear-gradient(180deg,#fef2f2,#fff)}
+  .card h3{margin:0 0 8px;font-size:15.5px;font-weight:800}
+  .card.good h3{color:#065f46} .card.bad h3{color:#7f1d1d}
+  .card ul{margin:0;padding-left:2px;list-style:none}
+  .card li{font-size:13.5px;margin:6px 0;display:flex;gap:9px;align-items:flex-start;line-height:1.45}
+  .card li code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#f1f5f9;padding:1px 5px;border-radius:5px}
+  .mk{flex:0 0 auto;font-weight:800}
+  .good .mk{color:var(--good)} .bad .mk{color:var(--bad)}
+
+  .caption{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;border-radius:999px;padding:7px 15px;background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">🔌 Step 1 · the foundation check</span>
+    <h1><span class="grad">hello_bedrock.py</span> — can we even talk to Claude?</h1>
+    <p class="sub">Before any agent, MCP, database, or Teleport — one tiny round-trip that proves the whole AI foundation works.</p>
+  </header>
+
+  <svg viewBox="0 0 1300 300" role="img" aria-label="hello_bedrock.py flow">
+    <defs>
+      <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+    </defs>
+
+    <rect class="zone z-local" x="14"  y="70" width="862" height="184"></rect>
+    <text class="zlabel zl-local" x="32" y="94">💻 Your Mac</text>
+    <rect class="zone z-bed" x="892" y="70" width="394" height="184"></rect>
+    <text class="zlabel zl-bed" x="910" y="94">☁ Amazon Bedrock · ap-south-1</text>
+
+    <!-- boxes -->
+    <g class="box local"><rect x="40" y="116" width="190" height="104"></rect>
+      <text class="t" x="135" y="148" text-anchor="middle">▶️ Run it</text>
+      <text class="s" x="135" y="168" text-anchor="middle">the smoke test</text>
+      <text class="f" x="135" y="190" text-anchor="middle">hello_bedrock.py</text></g>
+
+    <g class="box local"><rect x="272" y="116" width="200" height="104"></rect>
+      <text class="t" x="372" y="148" text-anchor="middle">🔑 boto3 client</text>
+      <text class="s" x="372" y="168" text-anchor="middle">region + your AWS creds</text>
+      <text class="f" x="372" y="190" text-anchor="middle">no secret in this file</text></g>
+
+    <g class="box local"><rect x="514" y="116" width="214" height="104"></rect>
+      <text class="t" x="621" y="148" text-anchor="middle">💬 converse()</text>
+      <text class="s" x="621" y="168" text-anchor="middle">one message · no tools</text>
+      <text class="f" x="621" y="190" text-anchor="middle">Bedrock Converse API</text></g>
+
+    <g class="box bedrock"><rect x="918" y="116" width="300" height="104"></rect>
+      <text class="t" x="1068" y="148" text-anchor="middle">🧠 Claude on Bedrock</text>
+      <text class="s" x="1068" y="168" text-anchor="middle">Opus 4.5 · via inference profile</text>
+      <text class="f" x="1068" y="190" text-anchor="middle">global.anthropic.claude-opus-4-5…</text></g>
+
+    <!-- wires -->
+    <path id="w1" class="wire w-local" d="M230,168 H272" marker-end="url(#ah)"/>
+    <path id="w2" class="wire w-local" d="M472,168 H514" marker-end="url(#ah)"/>
+    <path id="w3" class="wire w-bed"   d="M728,168 H918" marker-end="url(#ah)"/>
+    <text class="lbl" x="251" y="154">create client</text>
+    <text class="lbl" x="493" y="154">build request</text>
+    <text class="lbl" x="823" y="154">1 round-trip · maxTokens 200</text>
+
+    <!-- return -->
+    <path id="wRet" class="wire w-ret" d="M1068,220 V258 Q1068,276 1048,276 H155 Q135,276 135,258 V220" marker-end="url(#ah)"/>
+    <text class="lbl" x="600" y="276">one sentence comes back → printed in your terminal ✅</text>
+
+    <!-- packets -->
+    <circle r="4.6" class="pkt p-local"><animateMotion dur="0.8s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-local"><animateMotion dur="0.8s" begin="0.3s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+    <circle r="5" class="pkt p-bed"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#w3"/></animateMotion></circle>
+    <circle r="5" class="pkt p-ret"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#wRet"/></animateMotion></circle>
+  </svg>
+
+  <div class="why">
+    <div class="card good">
+      <h3>✅ Why it matters — a green check proves the whole foundation in one shot</h3>
+      <ul>
+        <li><span class="mk">✓</span><span>Your <b>AWS credentials + region</b> are valid</span></li>
+        <li><span class="mk">✓</span><span><b>Bedrock model access</b> is enabled for this Claude model</span></li>
+        <li><span class="mk">✓</span><span>The <b>inference profile</b> ID is correct (<code>global.anthropic…</code>)</span></li>
+        <li><span class="mk">✓</span><span>The <b>network path</b> to Bedrock works — Claude actually replies</span></li>
+      </ul>
+    </div>
+    <div class="card bad">
+      <h3>❌ And it catches the two classic Bedrock errors early — with a fix hint</h3>
+      <ul>
+        <li><span class="mk">✕</span><span><code>AccessDenied</code> → model access isn’t enabled yet → <b>Bedrock console → Model access (ap-south-1)</b></span></li>
+        <li><span class="mk">✕</span><span><code>ValidationException … on-demand</code> → this model needs an <b>inference profile</b>, not the bare ID</span></li>
+        <li><span class="mk">✕</span><span>No tools, no agent, no database — so a failure here can <b>only</b> be the model connection</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="caption">
+    <span class="pill">🧱 Run this FIRST — if Claude can’t even say hello, nothing downstream (agent · MCP · RDS · Teleport) can work.</span>
+  </div>
+</div>
+</body>
+</html>

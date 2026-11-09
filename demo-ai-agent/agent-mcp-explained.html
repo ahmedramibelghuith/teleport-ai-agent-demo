@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agent_mcp.py — explained</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --bg:#f8fafc;
+    --local:#6366f1; --bedrock:#f59e0b; --mcp:#0d9488; --db:#2563eb; --ret:#0ea5e9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #fff7ed 0%, transparent 60%),
+      radial-gradient(900px 480px at -5% 115%, #ecfeff 0%, transparent 55%),
+      var(--bg);
+    padding:26px 18px 40px}
+  .wrap{max-width:1320px;margin:0 auto}
+  header{text-align:center;margin-bottom:6px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--mcp);
+    padding:5px 13px;border-radius:999px;box-shadow:0 8px 20px -8px var(--mcp)}
+  h1{font-size:29px;margin:11px 0 4px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--local),var(--mcp));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  svg{width:100%;height:auto;display:block;margin-top:4px}
+
+  .box rect{fill:#fff;rx:14;filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));stroke-width:2}
+  .box .t{font-size:14.5px;font-weight:800;fill:var(--ink)}
+  .box .s{font-size:11px;fill:var(--muted)}
+  .box .f{font-size:10.5px;font-weight:600;fill:#475569;font-family:ui-monospace,Menlo,monospace}
+  .client rect{stroke:var(--local)}
+  .brain rect{stroke:var(--bedrock);stroke-width:2.8;fill:#fffbeb}
+  .server rect{stroke:var(--mcp);fill:#f0fdfa}
+  .db rect{stroke:var(--db)}
+
+  .zone{fill:#fff;opacity:.5;stroke-width:1.5;stroke-dasharray:2 5;rx:18}
+  .z-local{stroke:var(--local)} .z-aws{stroke:var(--db)}
+  .zlabel{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .zl-local{fill:var(--local)} .zl-aws{fill:var(--db)}
+
+  .wire{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 8;animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-16}}
+  .w-brain{stroke:var(--bedrock)} .w-mcp{stroke:var(--mcp)} .w-db{stroke:var(--db)} .w-ret{stroke:var(--ret)}
+  .pkt{filter:drop-shadow(0 0 4px currentColor)}
+  .p-brain{fill:var(--bedrock);color:var(--bedrock)} .p-mcp{fill:var(--mcp);color:var(--mcp)}
+  .p-db{fill:var(--db);color:var(--db)} .p-ret{fill:var(--ret);color:var(--ret)}
+  .lbl{font-size:10.5px;font-weight:700;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;
+    stroke-linejoin:round;text-anchor:middle}
+  .loop{font-size:12px;font-weight:800;fill:var(--bedrock);text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:3.4px}
+
+  .caption{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 14px}
+  .p-disc{background:#ccfbf1;color:#115e59}
+  .p-msg{background:#e0e7ff;color:#3730a3}
+  .p-seam{background:#ede9fe;color:#5b21b6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">🔌 Phase 2 · the MCP agent</span>
+    <h1><span class="grad">agent_mcp.py</span> — the brain, the messenger, and the tool</h1>
+    <p class="sub">Claude reasons, the agent relays, an MCP tool does the touching. The agent itself never goes near the database.</p>
+  </header>
+
+  <svg viewBox="0 0 1300 384" role="img" aria-label="agent_mcp.py flow">
+    <defs>
+      <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+    </defs>
+
+    <!-- zones -->
+    <rect class="zone z-local" x="40" y="176" width="792" height="140"></rect>
+    <text class="zlabel zl-local" x="58" y="200">💻 Your Mac</text>
+    <rect class="zone z-aws" x="1018" y="176" width="244" height="140"></rect>
+    <text class="zlabel zl-aws" x="1036" y="200">☁ AWS RDS</text>
+
+    <!-- the brain (top) -->
+    <g class="box brain"><rect x="110" y="40" width="320" height="76"></rect>
+      <text class="t" x="270" y="70" text-anchor="middle">🧠 Claude on Bedrock</text>
+      <text class="s" x="270" y="90" text-anchor="middle">the brain — reasons, picks the tool &amp; SQL</text>
+      <text class="f" x="270" y="108" text-anchor="middle">bedrock.converse · Opus 4.5</text></g>
+
+    <!-- agent (client) -->
+    <g class="box client"><rect x="60" y="210" width="250" height="106"></rect>
+      <text class="t" x="185" y="244" text-anchor="middle">🤖 agent_mcp.py</text>
+      <text class="s" x="185" y="264" text-anchor="middle">the MCP CLIENT · the messenger</text>
+      <text class="f" x="185" y="286" text-anchor="middle">reason → call tool → observe</text></g>
+
+    <!-- mcp server (the tool) -->
+    <g class="box server"><rect x="560" y="210" width="250" height="106"></rect>
+      <text class="t" x="685" y="244" text-anchor="middle">🔧 mcp_server.py</text>
+      <text class="s" x="685" y="264" text-anchor="middle">the MCP SERVER = the tool</text>
+      <text class="f" x="685" y="286" text-anchor="middle">run_read_query</text></g>
+
+    <!-- database -->
+    <g class="box db"><rect x="1040" y="210" width="200" height="106"></rect>
+      <text class="t" x="1140" y="244" text-anchor="middle">🗄️ orders DB</text>
+      <text class="s" x="1140" y="264" text-anchor="middle">Postgres · opsdb</text>
+      <text class="f" x="1140" y="286" text-anchor="middle">the only thing touching data</text></g>
+
+    <!-- loop: agent <-> Claude -->
+    <path id="wAsk"   class="wire w-brain" d="M165,210 C175,168 200,138 232,116" marker-end="url(#ah)"/>
+    <path id="wReply" class="wire w-brain" d="M312,116 C346,140 250,178 214,210" marker-end="url(#ah)"/>
+    <text class="lbl" x="138" y="156">① prompt + tools</text>
+    <text class="lbl" x="356" y="160">② "run this SQL"</text>
+    <text class="loop" x="270" y="150">↻ ~8×</text>
+
+    <!-- agent -> server (MCP, stdio) -->
+    <path id="wMcp" class="wire w-mcp" d="M310,263 H560" marker-end="url(#ah)"/>
+    <text class="lbl" x="435" y="249">stdio · ① list_tools  ② call_tool</text>
+
+    <!-- server -> db -->
+    <path id="wDb" class="wire w-db" d="M810,263 H1040" marker-end="url(#ah)"/>
+    <text class="lbl" x="925" y="249">run_read_query → rows</text>
+
+    <!-- return -->
+    <path id="wRet" class="wire w-ret" d="M1140,316 V352 Q1140,368 1120,368 H205 Q185,368 185,316" marker-end="url(#ah)"/>
+    <text class="lbl" x="650" y="368">rows fed back to Claude → loop ~8× → 🩺 root-cause printed</text>
+
+    <!-- packets -->
+    <circle r="4.6" class="pkt p-brain"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#wAsk"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-brain"><animateMotion dur="1.6s" begin="0.8s" repeatCount="indefinite"><mpath href="#wReply"/></animateMotion></circle>
+    <circle r="5" class="pkt p-mcp"><animateMotion dur="1.3s" repeatCount="indefinite"><mpath href="#wMcp"/></animateMotion></circle>
+    <circle r="5" class="pkt p-db"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#wDb"/></animateMotion></circle>
+    <circle r="5" class="pkt p-ret"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#wRet"/></animateMotion></circle>
+  </svg>
+
+  <div class="caption">
+    <span class="pill p-disc">🔌 Tools are DISCOVERED, not hardcoded — <code style="background:transparent">list_tools()</code>, so you can add/swap tools without touching the agent</span>
+    <span class="pill p-msg">🤖 The agent never touches the DB — it only reasons with Claude and calls the tool over MCP</span>
+    <span class="pill p-seam">🛡️ This client ↔ tool boundary is exactly the seam Teleport secures later</span>
+  </div>
+</div>
+</body>
+</html>

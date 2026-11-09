@@ -1,0 +1,92 @@
+#!/bin/bash
+# Bootstrap: install the app + tbot, run both as systemd services.
+# (Terraform renders the named template vars below before this runs.)
+set -euxo pipefail
+
+dnf update -y
+dnf install -y python3.11 python3.11-pip git tar
+
+# --- Install Teleport (provides the tbot binary) ---
+curl -fsSL https://cdn.teleport.dev/install.sh | bash -s 18.8.3
+ln -sf "$(command -v tbot)" /usr/local/bin/tbot
+
+# --- Fetch the application (public repo) ---
+cd /opt
+git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY.git app
+cd /opt/app/demo-ai-agent
+python3.11 -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
+
+# --- App environment (NO DB password: the agent uses the Teleport tunnel) ---
+cat > /opt/app/demo-ai-agent/.env <<'ENVEOF'
+USE_TELEPORT=true
+TELEPORT_DB_PORT=5433
+TELEPORT_DB_USER=${db_user}
+DB_NAME=${db_name}
+AWS_REGION=${region}
+BEDROCK_MODEL_ID=${bedrock_model_id}
+ENVEOF
+
+# --- tbot config: IAM join (no expiring secret), opens the DB tunnel ---
+mkdir -p /opt/app/tbot/tbot-data
+cat > /opt/app/tbot/tbot.yaml <<'TBOTEOF'
+version: v2
+proxy_server: ${teleport_proxy}
+onboarding:
+  join_method: iam
+  token: ${teleport_iam_token}
+storage:
+  type: directory
+  path: /opt/app/tbot/tbot-data
+renewal_interval: 5m
+services:
+  - type: database-tunnel
+    listen: tcp://127.0.0.1:5433
+    service: ${db_resource}
+    database: ${db_name}
+    username: ${db_user}
+TBOTEOF
+
+# --- systemd: tbot ---
+cat > /etc/systemd/system/tbot.service <<'SVCEOF'
+[Unit]
+Description=Teleport Machine ID (tbot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/tbot start -c /opt/app/tbot/tbot.yaml
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+# --- systemd: streamlit ---
+cat > /etc/systemd/system/streamlit.service <<'SVCEOF'
+[Unit]
+Description=Streamlit UI
+After=tbot.service network-online.target
+Wants=tbot.service
+
+[Service]
+WorkingDirectory=/opt/app/demo-ai-agent
+EnvironmentFile=/opt/app/demo-ai-agent/.env
+ExecStart=/opt/app/demo-ai-agent/.venv/bin/streamlit run app.py \
+  --server.port ${app_port} --server.address 0.0.0.0 \
+  --server.headless true --server.enableCORS false --server.enableXsrfProtection false
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable --now tbot.service
+sleep 15
+systemctl enable --now streamlit.service

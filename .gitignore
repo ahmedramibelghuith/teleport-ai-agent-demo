@@ -1,0 +1,33 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Logs and operating system files
+*.log
+.DS_Store
+Thumbs.db
+
+# Terraform state and local settings
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+
+# Teleport generated identities and configuration
+**/tbot-data/
+**/db-service-data/
+**/teleport/tbot.yaml
+**/teleport/teleport-db.yaml
+*.token

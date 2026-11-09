@@ -1,0 +1,13 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+
+# Teleport Phase 4 -- secrets / short-lived identity material, never commit
+teleport/tbot-data/
+teleport/db-service-data/
+teleport/teleport-db.yaml
+teleport/tbot.yaml
+teleport/*.token
+teleport/db-service.log
+teleport/tbot.log

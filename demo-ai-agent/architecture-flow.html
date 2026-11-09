@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI SRE Agent · live flow</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --bg:#f8fafc;
+    --local:#6366f1; --bedrock:#f59e0b; --teleport:#7c3aed; --aws:#2563eb; --ret:#0ea5e9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #eef2ff 0%, transparent 60%),
+      radial-gradient(900px 480px at -5% 115%, #f3e8ff 0%, transparent 55%),
+      var(--bg);
+    padding:26px 18px 40px}
+  .wrap{max-width:1320px;margin:0 auto}
+  header{text-align:center;margin-bottom:14px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--teleport);
+    padding:5px 13px;border-radius:999px;box-shadow:0 8px 20px -8px var(--teleport)}
+  h1{font-size:30px;margin:12px 0 4px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--local),var(--teleport));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  svg{width:100%;height:auto;display:block;margin-top:6px}
+
+  /* boxes */
+  .box rect{fill:#fff;rx:14;filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));stroke-width:2}
+  .box .t{font-size:15px;font-weight:800;fill:var(--ink)}
+  .box .s{font-size:11px;fill:var(--muted)}
+  .box .f{font-size:10.5px;font-weight:600;fill:#475569;font-family:ui-monospace,Menlo,monospace}
+  .local rect{stroke:var(--local)} .bedrock rect{stroke:var(--bedrock);stroke-width:2.8;fill:#fffbeb}
+  .teleport rect{stroke:var(--teleport)} .aws rect{stroke:var(--aws)}
+
+  /* zone panels */
+  .zone{fill:#ffffff;opacity:.55;stroke-width:1.5;stroke-dasharray:2 5;rx:20}
+  .z-local{stroke:var(--local)} .z-tp{stroke:var(--teleport)} .z-aws{stroke:var(--aws)}
+  .zlabel{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+  .zl-local{fill:var(--local)} .zl-tp{fill:var(--teleport)} .zl-aws{fill:var(--aws)}
+
+  /* animated wires */
+  .wire{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 8;
+    animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-16}}
+  .w-local{stroke:var(--local)} .w-bedrock{stroke:var(--bedrock)}
+  .w-teleport{stroke:var(--teleport)} .w-aws{stroke:var(--aws)} .w-ret{stroke:var(--ret)}
+  .pkt{filter:drop-shadow(0 0 4px currentColor)}
+  .p-local{fill:var(--local);color:var(--local)} .p-bedrock{fill:var(--bedrock);color:var(--bedrock)}
+  .p-teleport{fill:var(--teleport);color:var(--teleport)} .p-aws{fill:var(--aws);color:var(--aws)}
+  .p-ret{fill:var(--ret);color:var(--ret)}
+
+  /* arrow labels with white halo */
+  .lbl{font-size:11px;font-weight:700;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;
+    stroke-linejoin:round;text-anchor:middle}
+  .loop{font-size:11px;font-weight:800;fill:var(--bedrock);text-anchor:middle;
+    paint-order:stroke;stroke:#fff;stroke-width:3.4px}
+
+  /* security beat pills */
+  .beat{font-size:10.5px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke-width:3px;stroke-linejoin:round}
+  .legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+    border-radius:999px;padding:6px 13px}
+  .pill.nopw{background:#d1fae5;color:#065f46}
+  .pill.deny{background:#fee2e2;color:#7f1d1d}
+  .pill.aud{background:#ede9fe;color:#5b21b6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">🛡️ Secured by Teleport</span>
+    <h1>AI SRE Agent — <span class="grad">live request flow</span></h1>
+    <p class="sub">Follow the packets: a question flows left → right to the database, the answer flows back.</p>
+  </header>
+
+  <svg viewBox="0 0 1300 620" role="img" aria-label="Architecture flow">
+    <defs>
+      <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+      </marker>
+    </defs>
+
+    <!-- ================= ZONE PANELS ================= -->
+    <rect class="zone z-local" x="24"  y="150" width="650" height="300"></rect>
+    <text class="zlabel zl-local" x="44" y="176">💻 Your Mac</text>
+
+    <rect class="zone z-tp" x="700" y="150" width="330" height="300"></rect>
+    <text class="zlabel zl-tp" x="720" y="176">☁ Teleport Cloud</text>
+
+    <rect class="zone z-aws" x="1056" y="150" width="220" height="300"></rect>
+    <text class="zlabel zl-aws" x="1076" y="176">☁ AWS · ap-south-1</text>
+
+    <!-- ================= THE AI MODEL (Claude on Bedrock) ================= -->
+    <g class="box bedrock">
+      <rect x="150" y="36" width="320" height="96"></rect>
+      <text class="t" x="310" y="68" text-anchor="middle">🧠 Claude — the AI model</text>
+      <text class="s" x="310" y="88" text-anchor="middle">Amazon Bedrock · reasons &amp; picks the SQL</text>
+      <text class="f" x="310" y="110" text-anchor="middle">bedrock.converse · Opus 4.5</text>
+    </g>
+
+    <!-- ================= YOUR MAC boxes ================= -->
+    <g class="box local">
+      <rect x="44" y="300" width="140" height="96"></rect>
+      <text class="t" x="114" y="332" text-anchor="middle">🧑 You · UI</text>
+      <text class="s" x="114" y="352" text-anchor="middle">ask the agent</text>
+      <text class="f" x="114" y="374" text-anchor="middle">app.py</text>
+    </g>
+    <g class="box local">
+      <rect x="214" y="300" width="140" height="96"></rect>
+      <text class="t" x="284" y="332" text-anchor="middle">🤖 Agent</text>
+      <text class="s" x="284" y="352" text-anchor="middle">Bedrock + MCP loop</text>
+      <text class="f" x="284" y="374" text-anchor="middle">agent_core.py</text>
+    </g>
+    <g class="box local">
+      <rect x="384" y="300" width="140" height="96"></rect>
+      <text class="t" x="454" y="332" text-anchor="middle">🔧 DB Tool</text>
+      <text class="s" x="454" y="352" text-anchor="middle">run_read_query</text>
+      <text class="f" x="454" y="374" text-anchor="middle">mcp_server · db.py</text>
+    </g>
+    <g class="box local">
+      <rect x="534" y="300" width="130" height="96"></rect>
+      <text class="t" x="599" y="330" text-anchor="middle">🔑 tbot</text>
+      <text class="s" x="599" y="349" text-anchor="middle">short-lived cert</text>
+      <text class="f" x="599" y="371" text-anchor="middle">tbot.yaml</text>
+    </g>
+
+    <!-- ================= TELEPORT CLOUD boxes ================= -->
+    <g class="box teleport">
+      <rect x="716" y="232" width="298" height="92"></rect>
+      <text class="t" x="865" y="262" text-anchor="middle">🛡️ Identity-aware Proxy</text>
+      <text class="s" x="865" y="282" text-anchor="middle">RBAC: read-only · opsdb · readonly_agent</text>
+      <text class="f" x="865" y="304" text-anchor="middle">role-agent-db-readonly.yaml</text>
+    </g>
+    <g class="box teleport">
+      <rect x="716" y="346" width="298" height="74"></rect>
+      <text class="t" x="865" y="376" text-anchor="middle">📜 Audit log + recording</text>
+      <text class="s" x="865" y="397" text-anchor="middle">db.session.query → tied to agent-bot</text>
+    </g>
+
+    <!-- ================= AWS boxes ================= -->
+    <g class="box aws">
+      <rect x="1072" y="232" width="188" height="78"></rect>
+      <text class="t" x="1166" y="260" text-anchor="middle">🗝️ DB Service</text>
+      <text class="s" x="1166" y="280" text-anchor="middle">mints IAM token</text>
+      <text class="f" x="1166" y="300" text-anchor="middle">teleport-db.yaml</text>
+    </g>
+    <g class="box aws">
+      <rect x="1072" y="338" width="188" height="92"></rect>
+      <text class="t" x="1166" y="368" text-anchor="middle">🐘 RDS PostgreSQL</text>
+      <text class="s" x="1166" y="388" text-anchor="middle">opsdb · orders</text>
+      <text class="f" x="1166" y="410" text-anchor="middle">readonly_agent · SELECT-only</text>
+    </g>
+
+    <!-- ================= WIRES (left→right) ================= -->
+    <!-- Claude (Bedrock) ⇄ Agent loop -->
+    <!-- wUp = agent ASKS the model (prompt + tools); wDown = model REPLIES (run this SQL) -->
+    <path id="wUp"   class="wire w-bedrock" d="M278,300 C286,235 300,176 318,132" marker-end="url(#ah)"/>
+    <path id="wDown" class="wire w-bedrock" d="M360,132 C376,200 330,255 294,300" marker-end="url(#ah)"/>
+    <text class="lbl" x="226" y="214">① prompt + tool schema</text>
+    <text class="lbl" x="410" y="212">② "run this SQL"</text>
+    <text class="loop" x="318" y="272">↻ ~8× · reason → query → observe</text>
+
+    <!-- UI → Agent → Tool → tbot -->
+    <path id="w1" class="wire w-local" d="M184,348 H214" marker-end="url(#ah)"/>
+    <path id="w2" class="wire w-local" d="M354,348 H384" marker-end="url(#ah)"/>
+    <path id="w3" class="wire w-local" d="M524,348 H534" marker-end="url(#ah)"/>
+    <text class="lbl" x="199" y="338">asks</text>
+    <text class="lbl" x="369" y="338">MCP</text>
+
+    <!-- tbot → Teleport proxy -->
+    <path id="w4" class="wire w-teleport" d="M664,344 C690,344 694,278 716,278" marker-end="url(#ah)"/>
+    <text class="lbl" x="690" y="250">short-lived cert · mTLS</text>
+
+    <!-- proxy → DB service -->
+    <path id="w5" class="wire w-aws" d="M1014,272 H1072" marker-end="url(#ah)"/>
+    <text class="lbl" x="1043" y="262">forward</text>
+
+    <!-- DB service → RDS -->
+    <path id="w6" class="wire w-aws" d="M1166,310 V338" marker-end="url(#ah)"/>
+    <text class="lbl" x="1166" y="328">IAM token · TLS</text>
+
+    <!-- proxy → audit (down) -->
+    <path id="w7" class="wire w-teleport" d="M865,324 V346" marker-end="url(#ah)"/>
+
+    <!-- return path RDS → UI (the answer) -->
+    <path id="wRet" class="wire w-ret"
+      d="M1166,430 V500 Q1166,520 1146,520 H134 Q114,520 114,500 V396" marker-end="url(#ah)"/>
+    <text class="lbl" x="640" y="514">rows return the same way → live table + root-cause diagnosis in the UI</text>
+
+    <!-- ================= travelling packets ================= -->
+    <circle r="4.6" class="pkt p-bedrock"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#wDown"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-bedrock"><animateMotion dur="2.2s" begin="1.1s" repeatCount="indefinite"><mpath href="#wUp"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-local"><animateMotion dur="0.9s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-local"><animateMotion dur="0.9s" begin="0.3s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-local"><animateMotion dur="0.6s" begin="0.5s" repeatCount="indefinite"><mpath href="#w3"/></animateMotion></circle>
+    <circle r="5" class="pkt p-teleport"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#w4"/></animateMotion></circle>
+    <circle r="5" class="pkt p-aws"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#w5"/></animateMotion></circle>
+    <circle r="5" class="pkt p-aws"><animateMotion dur="1s" begin="0.4s" repeatCount="indefinite"><mpath href="#w6"/></animateMotion></circle>
+    <circle r="4.4" class="pkt p-teleport"><animateMotion dur="1.3s" repeatCount="indefinite"><mpath href="#w7"/></animateMotion></circle>
+    <circle r="5" class="pkt p-ret"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#wRet"/></animateMotion></circle>
+    <circle r="5" class="pkt p-ret"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite"><mpath href="#wRet"/></animateMotion></circle>
+  </svg>
+
+  <div class="legend">
+    <span class="pill nopw">✅ No static credential — short-lived identity end-to-end</span>
+    <span class="pill deny">⛔ Out-of-scope (postgres) — denied at the proxy</span>
+    <span class="pill aud">📜 Every query audited under the agent’s identity</span>
+  </div>
+</div>
+</body>
+</html>

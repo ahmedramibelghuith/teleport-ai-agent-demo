@@ -1,0 +1,18 @@
+# The least-privilege Teleport role the AI agent's identity gets.
+# It may ONLY log in to the opsdb database, and ONLY as the read-only Postgres
+# user we created (readonly_agent). Anything else -> Teleport denies it,
+# before the request ever reaches RDS. This demonstrates denial of out-of-scope actions.
+kind: role
+version: v7
+metadata:
+  name: agent-db-readonly
+spec:
+  allow:
+    db_labels:
+      '*': ['*']             # match any DB resource — the real lock-down is the two lines below
+    db_names: ["opsdb"]      # only this database
+    db_users: ["readonly_agent"]   # only the read-only Postgres user
+  deny: {}
+  options:
+    # Keep the agent's issued certs short-lived. tbot renews well before this.
+    max_session_ttl: 1h

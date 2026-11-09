@@ -1,0 +1,47 @@
+# Machine ID (tbot) configuration.
+#
+# tbot continuously authenticates to Teleport AS THE AGENT (a "bot" identity,
+# not a human, not the postgres master user), holding a short-lived certificate
+# that it renews on its own. The `database-tunnel` service opens a plain local
+# Postgres port (127.0.0.1:5433) that is transparently routed THROUGH the
+# Teleport proxy to RDS using that identity.
+#
+# The agent's db.py just connects to 127.0.0.1:5433 with NO password and NO TLS
+# config of its own -- tbot owns the credential. That's the "no password in
+# .env / zero auth code in the app / cert refreshes itself" story, all in one.
+#
+# Generated from tbot.yaml.tmpl by setup.sh.
+version: v2
+proxy_server: __TENANT__:443
+
+onboarding:
+  join_method: token
+  token: __BOT_TOKEN__
+
+storage:
+  type: directory
+  path: ./teleport/tbot-data    # short-lived identity lives here; gitignored
+
+# How often tbot renews the agent's identity. Deliberately short so the cert
+# file refreshes frequently.
+renewal_interval: 5m
+
+services:
+  - type: database-tunnel
+    listen: tcp://127.0.0.1:5433
+    # 'service' = the Teleport database resource name; 'database' = the Postgres
+    # db; 'username' = the Postgres user (must be allowed by agent-db-readonly).
+    service: teleport-demo-db
+    database: opsdb
+    username: readonly_agent
+
+  # DENIAL DEMO: same agent identity asking to be the postgres
+  # SUPER-USER. agent-db-readonly does NOT allow db_user=postgres, so a client
+  # connecting here is denied BY TELEPORT at the proxy, before RDS is touched:
+  #   psql "host=127.0.0.1 port=5434 dbname=opsdb user=postgres sslmode=disable"
+  #   -> "access to db denied. User does not have permissions."
+  - type: database-tunnel
+    listen: tcp://127.0.0.1:5434
+    service: teleport-demo-db
+    database: opsdb
+    username: postgres

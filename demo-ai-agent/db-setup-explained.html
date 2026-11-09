@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setting up the demo database — seed.py &amp; admin_setup.py</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --bg:#f8fafc;
+    --local:#6366f1; --aws:#2563eb; --good:#059669; --bad:#dc2626; --iam:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #eef2ff 0%, transparent 60%),
+      radial-gradient(900px 480px at -5% 115%, #ecfdf5 0%, transparent 55%),
+      var(--bg);
+    padding:26px 18px 44px}
+  .wrap{max-width:1340px;margin:0 auto}
+  header{text-align:center;margin-bottom:6px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--aws);
+    padding:5px 13px;border-radius:999px;box-shadow:0 8px 20px -8px var(--aws)}
+  h1{font-size:29px;margin:11px 0 4px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--good),var(--aws),var(--iam));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+
+  section{margin-top:24px}
+  h2{font-size:19px;font-weight:800;margin:0 0 2px;letter-spacing:-.01em}
+  h2 .num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;
+    color:#fff;font-size:14px;margin-right:8px;vertical-align:middle}
+  .n1{background:var(--good)} .n2{background:var(--iam)}
+  .hint{color:var(--muted);font-size:13px;margin:0 0 4px}
+  svg{width:100%;height:auto;display:block}
+
+  .box rect{fill:#fff;rx:14;filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));stroke-width:2}
+  .box .t{font-size:14.5px;font-weight:800;fill:var(--ink)}
+  .box .s{font-size:11px;fill:var(--muted)}
+  .box .f{font-size:10.5px;font-weight:600;fill:#475569;font-family:ui-monospace,Menlo,monospace}
+  .local rect{stroke:var(--local)}
+  .aws rect{stroke:var(--aws)}
+  .good rect{stroke:var(--good);fill:#ecfdf5}
+  .bad rect{stroke:var(--bad);fill:#fef2f2}
+  .iam rect{stroke:var(--iam);fill:#faf5ff}
+
+  .zone{fill:#fff;opacity:.5;stroke-width:1.5;stroke-dasharray:2 5;rx:18}
+  .z-local{stroke:var(--local)} .z-aws{stroke:var(--aws)}
+  .zlabel{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .zl-local{fill:var(--local)} .zl-aws{fill:var(--aws)}
+
+  .wire{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 8;
+    animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-16}}
+  .w-local{stroke:var(--local)} .w-aws{stroke:var(--aws)} .w-good{stroke:var(--good)}
+  .w-bad{stroke:var(--bad)} .w-iam{stroke:var(--iam)}
+  .pkt{filter:drop-shadow(0 0 4px currentColor)}
+  .p-local{fill:var(--local);color:var(--local)} .p-aws{fill:var(--aws);color:var(--aws)}
+  .p-good{fill:var(--good);color:var(--good)} .p-bad{fill:var(--bad);color:var(--bad)}
+  .p-iam{fill:var(--iam);color:var(--iam)}
+
+  .lbl{font-size:10.5px;font-weight:700;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;
+    stroke-linejoin:round;text-anchor:middle}
+
+  .caption{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:4px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;border-radius:999px;padding:7px 15px}
+  .p-story{background:#fef3c7;color:#92400e}
+  .p-least{background:#d1fae5;color:#065f46}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">🗄️ Demo database setup</span>
+    <h1>Setting up the world: <span class="grad">seed.py</span> &amp; <span class="grad">admin_setup.py</span></h1>
+    <p class="sub">Two small scripts run once before the demo — one builds the data with a hidden bug, the other hands the agent a deliberately limited key.</p>
+  </header>
+
+  <!-- ============================ DIAGRAM 1 — seed.py ============================ -->
+  <section>
+    <h2><span class="num n1">1</span>seed.py — build the world (with a hidden bug)</h2>
+    <p class="hint">Fills the database with realistic order history… and plants the slow payment provider the agent will hunt down.</p>
+    <svg viewBox="0 0 1300 290" role="img" aria-label="seed.py flow">
+      <defs>
+        <marker id="ahA" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+      </defs>
+
+      <rect class="zone z-local" x="14"  y="74" width="232" height="180"></rect>
+      <text class="zlabel zl-local" x="32" y="98">💻 Your Mac</text>
+      <rect class="zone z-aws" x="258" y="74" width="950" height="180"></rect>
+      <text class="zlabel zl-aws" x="276" y="98">☁ AWS RDS · opsdb</text>
+
+      <!-- boxes -->
+      <g class="box local"><rect x="30" y="118" width="190" height="104"></rect>
+        <text class="t" x="125" y="150" text-anchor="middle">🌱 seed.py</text>
+        <text class="s" x="125" y="170" text-anchor="middle">run it — builds the data</text>
+        <text class="f" x="125" y="192" text-anchor="middle">seed.py · seed.sql</text></g>
+
+      <g class="box aws"><rect x="270" y="118" width="190" height="104"></rect>
+        <text class="t" x="365" y="150" text-anchor="middle">🏗️ CREATE orders</text>
+        <text class="s" x="365" y="170" text-anchor="middle">define the table</text>
+        <text class="f" x="365" y="192" text-anchor="middle">status · provider · duration</text></g>
+
+      <g class="box good"><rect x="510" y="118" width="190" height="104"></rect>
+        <text class="t" x="605" y="150" text-anchor="middle">✅ 40 healthy orders</text>
+        <text class="s" x="605" y="170" text-anchor="middle">stripe · paypal · 150–550ms</text>
+        <text class="f" x="605" y="192" text-anchor="middle">the calm “before”</text></g>
+
+      <g class="box bad"><rect x="750" y="118" width="190" height="104"></rect>
+        <text class="t" x="845" y="150" text-anchor="middle">🐌 18 slow orders</text>
+        <text class="s" x="845" y="170" text-anchor="middle">legacy_gateway · 8–14s</text>
+        <text class="f" x="845" y="192" text-anchor="middle">pending/failed — PLANTED 🐞</text></g>
+
+      <g class="box aws"><rect x="990" y="118" width="200" height="104"></rect>
+        <text class="t" x="1090" y="150" text-anchor="middle">🗄️ opsdb ready</text>
+        <text class="s" x="1090" y="170" text-anchor="middle">58 rows · a hidden problem</text>
+        <text class="f" x="1090" y="192" text-anchor="middle">ready for the agent</text></g>
+
+      <!-- wires -->
+      <path id="a1" class="wire w-local" d="M220,170 H270" marker-end="url(#ahA)"/>
+      <path id="a2" class="wire w-aws"   d="M460,170 H510" marker-end="url(#ahA)"/>
+      <path id="a3" class="wire w-good"  d="M700,170 H750" marker-end="url(#ahA)"/>
+      <path id="a4" class="wire w-bad"   d="M940,170 H990" marker-end="url(#ahA)"/>
+      <text class="lbl" x="245" y="156">connect (master)</text>
+      <text class="lbl" x="485" y="156">add ~40h history</text>
+      <text class="lbl" x="725" y="156">+ the last hour</text>
+      <text class="lbl" x="965" y="156">done</text>
+
+      <!-- packets -->
+      <circle r="4.6" class="pkt p-local"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#a1"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-aws"><animateMotion dur="1s" begin="0.25s" repeatCount="indefinite"><mpath href="#a2"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-good"><animateMotion dur="1s" begin="0.5s" repeatCount="indefinite"><mpath href="#a3"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-bad"><animateMotion dur="1s" begin="0.75s" repeatCount="indefinite"><mpath href="#a4"/></animateMotion></circle>
+    </svg>
+    <div class="caption">
+      <span class="pill p-story">🔎 The agent will DISCOVER this slow provider on its own — that’s the whole demo.</span>
+    </div>
+  </section>
+
+  <!-- ====================== DIAGRAM 2 — admin_setup.py ====================== -->
+  <section>
+    <h2><span class="num n2">2</span>admin_setup.py — issue the agent its limited badge</h2>
+    <p class="hint">Creates a brand-new database account for the agent — a “visitor badge”, not the master key.</p>
+    <svg viewBox="0 0 1300 290" role="img" aria-label="admin_setup.py flow">
+      <defs>
+        <marker id="ahB" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+      </defs>
+
+      <rect class="zone z-local" x="12"  y="74" width="214" height="180"></rect>
+      <text class="zlabel zl-local" x="30" y="98">💻 Your Mac</text>
+      <rect class="zone z-aws" x="236" y="74" width="990" height="180"></rect>
+      <text class="zlabel zl-aws" x="254" y="98">☁ AWS RDS · opsdb</text>
+
+      <g class="box local"><rect x="24" y="118" width="180" height="104"></rect>
+        <text class="t" x="114" y="150" text-anchor="middle">🛠️ admin_setup.py</text>
+        <text class="s" x="114" y="170" text-anchor="middle">run as the master user</text>
+        <text class="f" x="114" y="192" text-anchor="middle">admin_setup.py</text></g>
+
+      <g class="box aws"><rect x="236" y="118" width="180" height="104"></rect>
+        <text class="t" x="326" y="150" text-anchor="middle">🆔 readonly_agent</text>
+        <text class="s" x="326" y="170" text-anchor="middle">a new account · NO password</text>
+        <text class="f" x="326" y="192" text-anchor="middle">CREATE ROLE … LOGIN</text></g>
+
+      <g class="box iam"><rect x="448" y="118" width="170" height="104"></rect>
+        <text class="t" x="533" y="150" text-anchor="middle">🎫 rds_iam</text>
+        <text class="s" x="533" y="170" text-anchor="middle">short-lived ID, not a password</text>
+        <text class="f" x="533" y="192" text-anchor="middle">GRANT rds_iam</text></g>
+
+      <g class="box good"><rect x="650" y="118" width="160" height="104"></rect>
+        <text class="t" x="730" y="150" text-anchor="middle">👁️ SELECT orders</text>
+        <text class="s" x="730" y="170" text-anchor="middle">may READ</text>
+        <text class="f" x="730" y="192" text-anchor="middle">✅ CAN</text></g>
+
+      <g class="box bad"><rect x="842" y="118" width="160" height="104"></rect>
+        <text class="t" x="922" y="150" text-anchor="middle">🚫 no writes</text>
+        <text class="s" x="922" y="170" text-anchor="middle">no insert/update/delete</text>
+        <text class="f" x="922" y="192" text-anchor="middle">⛔ CAN’T</text></g>
+
+      <g class="box aws"><rect x="1034" y="118" width="180" height="104"></rect>
+        <text class="t" x="1124" y="150" text-anchor="middle">🔒 badge ready</text>
+        <text class="s" x="1124" y="170" text-anchor="middle">the agent’s limited key</text>
+        <text class="f" x="1124" y="192" text-anchor="middle">least privilege</text></g>
+
+      <path id="b1" class="wire w-local" d="M204,170 H236" marker-end="url(#ahB)"/>
+      <path id="b2" class="wire w-aws"   d="M416,170 H448" marker-end="url(#ahB)"/>
+      <path id="b3" class="wire w-iam"   d="M618,170 H650" marker-end="url(#ahB)"/>
+      <path id="b4" class="wire w-good"  d="M810,170 H842" marker-end="url(#ahB)"/>
+      <path id="b5" class="wire w-bad"   d="M1002,170 H1034" marker-end="url(#ahB)"/>
+      <text class="lbl" x="220" y="156">as master</text>
+      <text class="lbl" x="432" y="156">login method</text>
+      <text class="lbl" x="634" y="156">grant: CAN read</text>
+      <text class="lbl" x="826" y="156">but: CAN’T write</text>
+      <text class="lbl" x="1018" y="156">done</text>
+
+      <circle r="4.6" class="pkt p-local"><animateMotion dur="0.8s" repeatCount="indefinite"><mpath href="#b1"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-aws"><animateMotion dur="0.8s" begin="0.2s" repeatCount="indefinite"><mpath href="#b2"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-iam"><animateMotion dur="0.8s" begin="0.4s" repeatCount="indefinite"><mpath href="#b3"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-good"><animateMotion dur="0.8s" begin="0.6s" repeatCount="indefinite"><mpath href="#b4"/></animateMotion></circle>
+      <circle r="4.6" class="pkt p-bad"><animateMotion dur="0.8s" begin="0.8s" repeatCount="indefinite"><mpath href="#b5"/></animateMotion></circle>
+    </svg>
+    <div class="caption">
+      <span class="pill p-least">🛡️ Least privilege — the agent gets exactly what it needs, and nothing it doesn’t.</span>
+    </div>
+  </section>
+</div>
+</body>
+</html>

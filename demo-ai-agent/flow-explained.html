@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the AI Agent Works — Step by Step</title>
+<style>
+  :root{
+    --brain:#7c3aed; --brain-bg:#f3effe;
+    --msg:#2563eb;   --msg-bg:#eaf1ff;
+    --work:#16a34a;  --work-bg:#e8f7ee;
+    --cab:#d97706;   --cab-bg:#fdf2e2;
+    --you:#475569;   --you-bg:#eef2f6;
+    --ink:#0f172a; --muted:#64748b; --line:#cbd5e1;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:#ffffff; color:var(--ink); margin:0; padding:40px 20px; line-height:1.5;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:30px;margin:0 0 6px;text-align:center}
+  .sub{text-align:center;color:var(--muted);margin:0 0 28px;font-size:16px}
+
+  /* Cast */
+  .cast{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 36px}
+  .card{border:2px solid var(--line);border-radius:14px;padding:14px;text-align:center;background:#fff}
+  .card .emoji{font-size:30px}
+  .card .role{font-weight:700;font-size:15px;margin-top:6px}
+  .card .real{font-size:12px;color:var(--muted);margin-top:3px;font-family:ui-monospace,Menlo,monospace}
+  .card.brain{border-color:var(--brain);background:var(--brain-bg)}
+  .card.msg{border-color:var(--msg);background:var(--msg-bg)}
+  .card.work{border-color:var(--work);background:var(--work-bg)}
+  .card.cab{border-color:var(--cab);background:var(--cab-bg)}
+
+  /* Steps */
+  .step{display:flex;gap:16px;align-items:flex-start;margin:0 0 8px;
+        border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;background:#fff}
+  .num{flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+       justify-content:center;font-weight:800;color:#fff;font-size:17px;background:var(--ink)}
+  .body{flex:1}
+  .flowline{font-size:13px;font-weight:700;margin-bottom:4px;letter-spacing:.2px}
+  .plain{font-size:16px;margin:0 0 6px}
+  .techie{font-size:12.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;
+          background:#f8fafc;border:1px solid #eef2f6;border-radius:7px;padding:6px 9px;display:inline-block}
+  .arrow{text-align:center;color:var(--line);font-size:20px;margin:-2px 0 6px;line-height:1}
+
+  .tag{display:inline-block;padding:1px 8px;border-radius:6px;font-size:12px;font-weight:700;vertical-align:middle}
+  .t-brain{background:var(--brain-bg);color:var(--brain)}
+  .t-msg{background:var(--msg-bg);color:var(--msg)}
+  .t-work{background:var(--work-bg);color:var(--work)}
+  .t-cab{background:var(--cab-bg);color:var(--cab)}
+  .t-you{background:var(--you-bg);color:var(--you)}
+
+  .loop{margin:14px 0 8px;text-align:center;background:#fffbeb;border:1px dashed #f59e0b;
+        border-radius:12px;padding:12px 16px;font-size:14px;color:#92400e;font-weight:600}
+  .key{margin-top:30px;border-top:2px solid #e2e8f0;padding-top:18px}
+  .key h2{font-size:17px;margin:0 0 8px}
+  .key li{margin-bottom:6px;font-size:14.5px}
+  .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🔎 How the AI Agent Answers One Question</h1>
+  <p class="sub">Think of it like a brilliant detective locked in a room — he can only write notes. A messenger carries his notes to a librarian who fetches facts from a giant filing cabinet.</p>
+
+  <!-- THE CAST -->
+  <div class="cast">
+    <div class="card brain">
+      <div class="emoji">🧠</div>
+      <div class="role">The Brain</div>
+      <div class="real">Claude Opus (Bedrock)</div>
+    </div>
+    <div class="card msg">
+      <div class="emoji">🏃</div>
+      <div class="role">The Messenger</div>
+      <div class="real">agent_mcp.py</div>
+    </div>
+    <div class="card work">
+      <div class="emoji">📚</div>
+      <div class="role">The Librarian</div>
+      <div class="real">mcp_server.py</div>
+    </div>
+    <div class="card cab">
+      <div class="emoji">🗄️</div>
+      <div class="role">Filing Cabinet</div>
+      <div class="real">RDS database</div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="step">
+    <div class="num" style="background:var(--msg)">0</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-msg">Messenger</span> ⇄ <span class="tag t-work">Librarian</span></div>
+      <p class="plain"><b>Get ready.</b> The Messenger wakes up the Librarian and asks, “What can you look up for me?” The Librarian replies, “I can run lookups in the filing cabinet.”</p>
+      <span class="techie">MCP handshake → list_tools → ["run_read_query"]</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--msg)">1</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-you">You</span> → <span class="tag t-msg">Messenger</span> → <span class="tag t-brain">Brain</span></div>
+      <p class="plain"><b>You ask your question.</b> The Messenger hands the Brain your question <i>plus</i> a note: “Here are the lookups you’re allowed to request.”</p>
+      <span class="techie">"Checkout is slow — investigate" + tool list → Claude</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--brain)">2</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-brain">Brain</span> → <span class="tag t-msg">Messenger</span></div>
+      <p class="plain"><b>The Brain writes a note — it can’t move.</b> Instead of an answer it says: “I can’t reach the cabinet myself. Please run <i>this</i> lookup and tell me what you find.”</p>
+      <span class="techie">stopReason: "tool_use" → run_read_query(sql: "SELECT … GROUP BY payment_provider")</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--msg)">3</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-msg">Messenger</span> → <span class="tag t-work">Librarian</span></div>
+      <p class="plain"><b>The Messenger carries the request</b> over to the Librarian. (The Messenger never opens the cabinet itself — it just delivers the note.)</p>
+      <span class="techie">call_tool("run_read_query", { sql }) over MCP</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--work)">4</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-work">Librarian</span> → <span class="tag t-cab">Filing Cabinet</span></div>
+      <p class="plain"><b>The Librarian actually opens the cabinet</b> and runs the lookup. This is the <i>only</i> one who touches the data — using the key (password) on file.</p>
+      <span class="techie">db.py → psycopg2 → RDS executes the SELECT 🔑</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--cab)">5</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-cab">Cabinet</span> → <span class="tag t-work">Librarian</span> → <span class="tag t-msg">Messenger</span></div>
+      <p class="plain"><b>The facts come back.</b> The cabinet returns the rows to the Librarian, who hands them to the Messenger.</p>
+      <span class="techie">rows → [{ payment_provider: "legacy_gateway", avg_ms: 11962 }]</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--msg)">6</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-msg">Messenger</span> → <span class="tag t-brain">Brain</span></div>
+      <p class="plain"><b>The Messenger gives the facts to the Brain.</b> “Here’s the result of the lookup you asked for.”</p>
+      <span class="techie">toolResult → Claude (second Bedrock call)</span>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <div class="num" style="background:var(--brain)">7</div>
+    <div class="body">
+      <div class="flowline"><span class="tag t-brain">Brain</span> → decides</div>
+      <p class="plain"><b>The Brain reads the facts and decides:</b> either “I need one more lookup” (go back to step 2) <i>or</i> “I’ve got it!” and writes the final diagnosis.</p>
+      <span class="techie">stopReason "tool_use" → loop · or "end_turn" → final answer</span>
+    </div>
+  </div>
+
+  <div class="loop">🔁 Steps 2 → 6 repeat until the Brain has enough.
+     In your real run it looped <b>8 times</b> before answering.</div>
+
+  <!-- KEY TAKEAWAY -->
+  <div class="key">
+    <h2>The 3 things to remember</h2>
+    <ul>
+      <li>🧠 <b>The Brain only thinks</b> — it writes notes (“run this lookup”), it never touches the data.</li>
+      <li>🏃 <b>The Messenger is the hub</b> — the only one talking to <i>both</i> the Brain and the Librarian, carrying notes back and forth in a loop.</li>
+      <li>📚 <b>The Librarian does the work</b> — a separate program that actually opens the filing cabinet and runs the lookup.</li>
+    </ul>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:10px">
+      👉 <b>Where Teleport will go (next phase):</b> on the arrows in steps 3–4 — the path to the Librarian and the cabinet.
+      Instead of a key (password) kept on file, the agent will show a short-lived ID badge that expires on its own, and every lookup gets logged.</p>
+  </div>
+
+  <p class="footer">Teleport · AI SRE agent demo · phases 1–2 complete</p>
+</div>
+</body>
+</html>

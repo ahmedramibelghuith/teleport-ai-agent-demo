@@ -1,0 +1,17 @@
+# Teleport IAM-join token for the EC2-hosted tbot.
+# The EC2 instance proves its identity with its IAM role (no secret token that
+# can expire during operation). Reuses the existing `agent-bot` so the same
+# least-privilege role (agent-db-readonly) applies.
+#
+# Apply with:  tctl create -f terraform/teleport-ec2-iam-token.yaml
+kind: token
+version: v2
+metadata:
+  name: ec2-ui-iam-token
+spec:
+  roles: [Bot]
+  join_method: iam
+  bot_name: agent-bot
+  allow:
+    - aws_account: "123456789012"
+      aws_arn: "arn:aws:sts::123456789012:assumed-role/teleport-demo-ui-ec2-role/*"

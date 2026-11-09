@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleport identity bootstrap · live flow</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --bg:#f8fafc;
+    --human:#6366f1; --token:#f59e0b; --tp:#7c3aed; --machine:#059669; --aws:#2563eb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 520px at 85% -10%, #eef2ff 0%, transparent 60%),
+      radial-gradient(900px 480px at -5% 115%, #ecfdf5 0%, transparent 55%),
+      var(--bg);
+    padding:24px 18px 36px}
+  .wrap{max-width:1340px;margin:0 auto}
+  header{text-align:center;margin-bottom:10px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--tp);
+    padding:5px 13px;border-radius:999px;box-shadow:0 8px 20px -8px var(--tp)}
+  h1{font-size:29px;margin:11px 0 4px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--human),var(--tp),var(--machine));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:14.5px;margin:0}
+  svg{width:100%;height:auto;display:block;margin-top:6px}
+
+  .box rect{fill:#fff;rx:14;filter:drop-shadow(0 10px 18px rgba(15,23,42,.12));stroke-width:2}
+  .box .t{font-size:14.5px;font-weight:800;fill:var(--ink)}
+  .box .s{font-size:11px;fill:var(--muted)}
+  .box .f{font-size:10.5px;font-weight:600;fill:#475569;font-family:ui-monospace,Menlo,monospace}
+  .human rect{stroke:var(--human)} .token rect{stroke:var(--token)}
+  .tp rect{stroke:var(--tp)} .machine rect{stroke:var(--machine)} .aws rect{stroke:var(--aws)}
+
+  .zone{fill:#fff;opacity:.55;stroke-width:1.5;stroke-dasharray:2 5;rx:20}
+  .z-human{stroke:var(--human)} .z-tp{stroke:var(--tp)} .z-machine{stroke:var(--machine)}
+  .zlabel{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .zl-human{fill:var(--human)} .zl-tp{fill:var(--tp)} .zl-machine{fill:var(--machine)}
+
+  .wire{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 8;
+    animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-16}}
+  .w-human{stroke:var(--human)} .w-token{stroke:var(--token)}
+  .w-tp{stroke:var(--tp)} .w-machine{stroke:var(--machine)}
+  .w-renew{stroke:var(--tp);stroke-width:2;stroke-dasharray:4 6}
+  .w-aws{stroke:var(--aws)}
+  .pkt{filter:drop-shadow(0 0 4px currentColor)}
+  .p-human{fill:var(--human);color:var(--human)} .p-token{fill:var(--token);color:var(--token)}
+  .p-tp{fill:var(--tp);color:var(--tp)} .p-machine{fill:var(--machine);color:var(--machine)}
+  .p-aws{fill:var(--aws);color:var(--aws)}
+  .tag{font-size:10px;font-weight:800;letter-spacing:.06em;text-anchor:middle;
+    paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+
+  .lbl{font-size:11px;font-weight:700;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;
+    stroke-linejoin:round;text-anchor:middle}
+  .loop{font-size:12px;font-weight:800;fill:var(--tp);text-anchor:middle;
+    paint-order:stroke;stroke:#fff;stroke-width:3.4px}
+
+  .legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;border-radius:999px;padding:6px 13px}
+  .p-anchor{background:#e0e7ff;color:#3730a3}
+  .p-once{background:#fef3c7;color:#92400e}
+  .p-renew{background:#ede9fe;color:#5b21b6}
+  .p-nosecret{background:#d1fae5;color:#065f46}
+  .p-iam{background:#dbeafe;color:#1e40af}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">🛡️ Teleport · identity bootstrap</span>
+    <h1>How trust is bootstrapped — <span class="grad">two identities, one token</span></h1>
+    <p class="sub">Follow the token 🎟️: a human mints it once, the machine trades it for its own short-lived identity.</p>
+  </header>
+
+  <svg viewBox="0 0 1300 668" role="img" aria-label="Teleport identity bootstrap flow">
+    <defs>
+      <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+      </marker>
+    </defs>
+
+    <!-- ===== ZONE PANELS ===== -->
+    <rect class="zone z-human"   x="20"  y="84"  width="680" height="190"></rect>
+    <text class="zlabel zl-human" x="40" y="110">👤 You · human bootstrap</text>
+
+    <rect class="zone z-tp"      x="470" y="330" width="320" height="180"></rect>
+    <text class="zlabel zl-tp"    x="490" y="356">☁ Teleport Cloud · Auth</text>
+
+    <rect class="zone z-machine" x="820" y="206" width="456" height="304"></rect>
+    <text class="zlabel zl-machine" x="840" y="232">🤖 Your Mac · machine identity</text>
+
+    <!-- ===== HUMAN row ===== -->
+    <g class="box human">
+      <rect x="36" y="150" width="128" height="96"></rect>
+      <text class="t" x="100" y="182" text-anchor="middle">👤 You</text>
+      <text class="s" x="100" y="201" text-anchor="middle">browser SSO + MFA</text>
+      <text class="f" x="100" y="223" text-anchor="middle">tsh login</text>
+    </g>
+    <g class="box human">
+      <rect x="210" y="150" width="128" height="96"></rect>
+      <text class="t" x="274" y="182" text-anchor="middle">🔐 Admin cert</text>
+      <text class="s" x="274" y="201" text-anchor="middle">your roles · ~12h</text>
+      <text class="f" x="274" y="223" text-anchor="middle">~/.tsh</text>
+    </g>
+    <g class="box human">
+      <rect x="384" y="150" width="120" height="96"></rect>
+      <text class="t" x="444" y="182" text-anchor="middle">🛠️ tctl</text>
+      <text class="s" x="444" y="201" text-anchor="middle">mint join token</text>
+      <text class="f" x="444" y="223" text-anchor="middle">tctl tokens add</text>
+    </g>
+    <g class="box token">
+      <rect x="540" y="150" width="142" height="96"></rect>
+      <text class="t" x="611" y="180" text-anchor="middle">🎟️ Join token</text>
+      <text class="s" x="611" y="199" text-anchor="middle">one-time · TTL 1h</text>
+      <text class="f" x="611" y="221" text-anchor="middle">→ tbot.yaml</text>
+    </g>
+
+    <!-- ===== TELEPORT AUTH (center) ===== -->
+    <g class="box tp">
+      <rect x="500" y="372" width="262" height="104"></rect>
+      <text class="t" x="631" y="408" text-anchor="middle">☁ Teleport Auth</text>
+      <text class="s" x="631" y="428" text-anchor="middle">validates token →</text>
+      <text class="s" x="631" y="445" text-anchor="middle">issues a machine cert</text>
+    </g>
+
+    <!-- ===== MACHINE zone ===== -->
+    <g class="box machine">
+      <rect x="864" y="248" width="158" height="96"></rect>
+      <text class="t" x="943" y="280" text-anchor="middle">🤖 tbot (Machine ID)</text>
+      <text class="s" x="943" y="299" text-anchor="middle">presents token ONCE</text>
+      <text class="f" x="943" y="321" text-anchor="middle">tbot start</text>
+    </g>
+    <g class="box machine">
+      <rect x="864" y="398" width="158" height="96"></rect>
+      <text class="t" x="943" y="430" text-anchor="middle">📜 Agent cert</text>
+      <text class="s" x="943" y="449" text-anchor="middle">agent-bot · ~1h ↻5m</text>
+      <text class="f" x="943" y="471" text-anchor="middle">tbot-data/tlscert</text>
+    </g>
+    <g class="box machine">
+      <rect x="1092" y="324" width="162" height="96"></rect>
+      <text class="t" x="1173" y="356" text-anchor="middle">🧑‍💻 app.py · db.py</text>
+      <text class="s" x="1173" y="375" text-anchor="middle">NO credential</text>
+      <text class="f" x="1173" y="397" text-anchor="middle">localhost:5433</text>
+    </g>
+
+    <!-- ===== WIRES ===== -->
+    <!-- human chain -->
+    <path id="w1" class="wire w-human" d="M164,198 H210" marker-end="url(#ah)"/>
+    <path id="w2" class="wire w-human" d="M338,198 H384" marker-end="url(#ah)"/>
+    <path id="w3" class="wire w-human" d="M504,198 H540" marker-end="url(#ah)"/>
+    <text class="lbl" x="187" y="184">SSO+MFA</text>
+    <text class="lbl" x="361" y="184">as you</text>
+    <text class="lbl" x="522" y="184">mints</text>
+
+    <!-- token handed to the machine -->
+    <path id="w4" class="wire w-token" d="M611,246 C660,300 790,290 864,292" marker-end="url(#ah)"/>
+    <text class="lbl" x="742" y="270">baked into tbot.yaml → handed to the machine</text>
+
+    <!-- machine presents token to Auth -->
+    <path id="w5" class="wire w-token" d="M884,344 C820,360 740,372 702,376" marker-end="url(#ah)"/>
+    <text class="lbl" x="798" y="356">presents token ONCE</text>
+    <text class="tag" x="798" y="340" fill="#92400e">OPTION A · token (demo)</text>
+
+    <!-- Auth issues machine cert -->
+    <path id="w6" class="wire w-tp" d="M762,452 C812,460 832,448 864,448" marker-end="url(#ah)"/>
+    <text class="lbl" x="815" y="476">issues short-lived cert</text>
+
+    <!-- renew loop (cert, not token) -->
+    <path id="w7" class="wire w-renew" d="M884,494 C812,524 716,506 700,480" marker-end="url(#ah)"/>
+    <text class="loop" x="792" y="520">↻ renews every 5 min — with its cert, not the token</text>
+
+    <!-- machine identity now serves the app -->
+    <path id="w8" class="wire w-machine" d="M1022,300 C1058,322 1060,352 1092,360" marker-end="url(#ah)"/>
+    <text class="lbl" x="1058" y="326">:5433 tunnel</text>
+
+    <!-- ===== travelling packets ===== -->
+    <circle r="4.6" class="pkt p-human"><animateMotion dur="0.7s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-human"><animateMotion dur="0.7s" begin="0.25s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+    <circle r="4.6" class="pkt p-human"><animateMotion dur="0.7s" begin="0.5s" repeatCount="indefinite"><mpath href="#w3"/></animateMotion></circle>
+    <circle r="5.2" class="pkt p-token"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#w4"/></animateMotion></circle>
+    <circle r="5.2" class="pkt p-token"><animateMotion dur="1.7s" begin="0.8s" repeatCount="indefinite"><mpath href="#w5"/></animateMotion></circle>
+    <circle r="5" class="pkt p-tp"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#w6"/></animateMotion></circle>
+    <circle r="4.2" class="pkt p-tp"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#w7"/></animateMotion></circle>
+    <circle r="5" class="pkt p-machine"><animateMotion dur="1.3s" repeatCount="indefinite"><mpath href="#w8"/></animateMotion></circle>
+
+    <!-- ===== OPTION B: aws_iam tokenless join (production-grade) ===== -->
+    <!-- TODO: swap to your real allow-rule (account id / role ARN) before deployment -->
+    <text class="tag" x="362" y="512" fill="#1e40af">OPTION B · tokenless (production)</text>
+    <g class="box aws">
+      <rect x="196" y="520" width="332" height="116"></rect>
+      <text class="t" x="362" y="552" text-anchor="middle">🔐 aws_iam join</text>
+      <text class="s" x="362" y="572" text-anchor="middle">machine signs sts:GetCallerIdentity →</text>
+      <text class="s" x="362" y="589" text-anchor="middle">Teleport verifies its IAM ARN. NO secret shared.</text>
+      <text class="f" x="362" y="611" text-anchor="middle">join_method: iam · allow: account / role-ARN</text>
+    </g>
+    <path id="w9" class="wire w-aws" d="M470,520 C520,502 506,492 528,478" marker-end="url(#ah)"/>
+    <text class="lbl" x="500" y="500">proves identity · NO secret</text>
+    <circle r="5.2" class="pkt p-aws"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#w9"/></animateMotion></circle>
+  </svg>
+
+  <div class="legend">
+    <span class="pill p-anchor">🧍 Trust anchors at a HUMAN — SSO + MFA, no secret to leak</span>
+    <span class="pill p-once">🎟️ The join token is ONE-TIME &amp; short-lived (TTL 1h)</span>
+    <span class="pill p-renew">♻️ The machine renews with its CERT — never the token again</span>
+    <span class="pill p-nosecret">🔒 app.py holds NO credential</span>
+    <span class="pill p-iam">🔐 Option B — aws_iam join: zero shared secret (production)</span>
+  </div>
+</div>
+</body>
+</html>
